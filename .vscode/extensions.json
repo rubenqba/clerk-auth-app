@@ -1,0 +1,19 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "EditorConfig.EditorConfig",
+    "m4ns0ur.base64",
+    "aaron-bond.better-comments",
+    "leodevbro.blockman",
+    "GitHub.copilot",
+    "GitHub.copilot-chat",
+    "mikestead.dotenv",
+    "dbaeumer.vscode-eslint",
+    "GitHub.vscode-github-actions",
+    "yzhang.markdown-all-in-one",
+    "redhat.vscode-yaml",
+    "ms-azuretools.vscode-docker",
+    "docker.docker",
+    "fastify.fastify-snippets"
+  ]
+}

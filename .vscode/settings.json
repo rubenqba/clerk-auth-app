@@ -1,0 +1,4 @@
+{
+  "npm.packageManager": "pnpm",
+  "chat.agent.enabled": true
+}
