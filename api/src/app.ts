@@ -2,7 +2,7 @@ import 'dotenv/config';
 import Fastify from 'fastify';
 import { serializerCompiler, validatorCompiler, ZodTypeProvider } from 'fastify-type-provider-zod';
 import { clerkPlugin } from '@clerk/fastify';
-import { healthRoute, protectedRoutes } from './routes';
+import routes from './routes';
 import clerkAuthPlugin from './plugins/clerkAuth';
 
 const fastify = Fastify({ trustProxy: true, logger: true }).withTypeProvider<ZodTypeProvider>();
@@ -11,10 +11,9 @@ fastify.setValidatorCompiler(validatorCompiler).setSerializerCompiler(serializer
 
 fastify
   .register(import('@fastify/sensible'))
-  .register(clerkPlugin, { audience: 'https://api.obseqia.com' })
+  .register(clerkPlugin, { audience: 'api://staging.obseqia.com' })
   .register(clerkAuthPlugin)
-  .register(healthRoute, { prefix: '/api' })
-  .register(protectedRoutes, { prefix: '/api' });
+  .register(routes);
 
 const start = async () => {
   try {

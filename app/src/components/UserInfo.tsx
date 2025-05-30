@@ -1,53 +1,52 @@
-'use client';
-import React, { useEffect, useState, Suspense } from 'react';
+import { auth } from '@clerk/nextjs/server';
+import React from 'react';
 
-const UserInfoContent: React.FC = () => {
-  const [userData, setUserData] = useState<object | null>(null);
-  const [adminData, setAdminData] = useState<object | null>(null);
-  const [error, setError] = useState<string | null>(null);
+async function fetchUserData(url: string, sudo: boolean = false) {
+  const delay = Math.floor(Math.random() * 11) * 1000;
+  await new Promise(resolve => setTimeout(resolve, delay));
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [userRes, adminRes] = await Promise.all([
-          fetch('/api/user'),
-          fetch('/api/user?elevated=true'),
-        ]);
-        if (!userRes.ok) throw new Error('Error fetching user data');
-        if (!adminRes.ok) throw new Error('Error fetching admin data');
-        const user = await userRes.json();
-        const admin = await adminRes.json();
-        setUserData(user);
-        setAdminData(admin);
-      } catch (error: unknown) {
-        setError((error as Error).message);
-      }
-    };
-    fetchData();
-  }, []);
+  const { getToken } = await auth();
+
+  const token = await (sudo ? getToken({ template: 'Administrator' }) : getToken());
+
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
+  if (!res.ok) {
+    return {
+      status: 'failed',
+      error: `Error fetching user data: ${res.status} ${res.statusText}`,
+      details: await res.json(),
+    }
+  };
+  return res.json();
+}
+
+interface UserInfoContentProps {
+  url: string;
+  sudo?: boolean;
+  title?: string;
+}
+
+const UserInfoContent = async ({ url, title, sudo = false }: UserInfoContentProps) => {
+  let userData: any = null;
+  let error: string | null = null;
+  try {
+    userData = await fetchUserData(url, sudo);
+  } catch (err: any) {
+    error = err.message;
+  }
 
   if (error) {
     return <div>Error: {error}</div>;
   }
 
   return (
-    <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start', width: '100%' }}>
-      <div style={{ flex: 1, minWidth: 0, maxWidth: '50vw', height: '60vh', overflow: 'auto', border: '1px solid #eee', borderRadius: 8, padding: 16, background: '#fafafa' }}>
-        <h2>User Information</h2>
-        <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{userData ? JSON.stringify(userData, null, 2) : 'Loading...'}</pre>
+    <>
+      {title && <h2 className="text-md font-semibold mb-2">{title}</h2>}
+      <div className='flex-grow overflow-auto'>
+        <pre className="whitespace-pre-wrap break-all text-xs">{userData ? JSON.stringify(userData, null, 2) : 'Loading...'}</pre>
       </div>
-      <div style={{ flex: 1, minWidth: 0, maxWidth: '50vw', height: '60vh', overflow: 'auto', border: '1px solid #eee', borderRadius: 8, padding: 16, background: '#fafafa' }}>
-        <h2>Admin Information</h2>
-        <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{adminData ? JSON.stringify(adminData, null, 2) : 'Loading...'}</pre>
-      </div>
-    </div>
+    </>
   );
 };
 
-const UserInfo: React.FC = () => (
-  <Suspense fallback={<div>Cargando información...</div>}>
-    <UserInfoContent />
-  </Suspense>
-);
-
-export default UserInfo;
+export default UserInfoContent;
